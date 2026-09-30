@@ -1,0 +1,7 @@
+canvasapi
+pandas
+python-dotenv
+pytz
+openpyxl
+odfpy
+
