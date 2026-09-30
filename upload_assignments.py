@@ -6,6 +6,7 @@
 ## * Tell what are the current assignment dates
 ## * suggest 23:59 by default
 
+import argparse
 import pandas as pd
 from canvasapi import Canvas
 from dotenv import load_dotenv
@@ -13,6 +14,11 @@ import os
 from datetime import datetime, timedelta
 import re
 import pytz
+
+
+parser = argparse.ArgumentParser(description="Upload assignments to Canvas from a schedule file.")
+parser.add_argument("schedule_file", help="Path to schedule file (.ods or .xlsx)")
+args = parser.parse_args()
 
 
 # Load .env
@@ -48,8 +54,8 @@ course_id = int(input("\nInput Course ID: "))
 course = canvas.get_course(course_id)
 print(f"Selected course: {course.name}")
 
-# Step 3: Prompt user to input schedule file path
-schedule_path = input("\nEnter path to schedule (.ods or .xlsx): ")
+# Step 3: Schedule file path from command line
+schedule_path = args.schedule_file
 
 # Step 4: Load schedule file
 if schedule_path.endswith(".ods"):
