@@ -26,6 +26,14 @@ It uses a course schedule sheet, and uploads the assignments there on canvas.
    
    In all operations with quarter names, the season case does not
    matter. 
+4. The script should get the list of all courses, and extract the
+   courses that correspond to the current quarter.  The course names
+   look like "Course code letter Ss yy: course name", where _Ss yy_ is
+   the quarter.  For instance, a course name may be
+   "INFO 370 C Au 26: Core Methods In Data Science".
+5. Besides the courses that correspond to the current quarter, it
+   should also print a course names "_Test_Assignment_Uploads" (the
+   name includes underscores).
 4. It should load all the courses for the current quarter, and the
    user for the course id.  Note that canvas API assumes the quarter
    is given as "Ss yy".
@@ -56,3 +64,13 @@ It uses a course schedule sheet, and uploads the assignments there on canvas.
 7. all uploaded assignments should be "published" on canvas.
 8. All uploaded assignments should be marked as "online upload".
 
+
+## Readme file
+
+Readme should be the basic installation/usage help.
+
+1. It should contain a few sentences explaining what the script does.
+2. It should have "Installation" section that explains how to install
+   it and set up the `.env` file.
+3. It should have "Usage" section that explains how to use it, both
+   command line and the schedule fire format.

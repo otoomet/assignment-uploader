@@ -14,6 +14,67 @@ from datetime import datetime, timedelta
 import re
 import pytz
 
+CANVAS_TZ = "America/Los_Angeles"
+SEASONS = {"au": "Au", "wi": "Wi", "sp": "Sp", "su": "Su"}
+
+
+def current_quarter(ref=None):
+    """Return (season, year) of the quarter containing ref (default: now in CANVAS_TZ).
+
+    Quarters begin: Autumn Aug 1, Winter Nov 1, Spring Feb 1, Summer May 1.
+    """
+    if ref is None:
+        ref = datetime.now(pytz.timezone(CANVAS_TZ))
+    m = ref.month
+    if m in (8, 9, 10):
+        return "Au", ref.year
+    if m in (11, 12):
+        return "Wi", ref.year + 1
+    if m == 1:
+        return "Wi", ref.year
+    if m in (2, 3, 4):
+        return "Sp", ref.year
+    return "Su", ref.year
+
+
+def parse_quarter_name(name):
+    """Parse a quarter name in any of 'yyyy-ss', 'ss yy' (space/hyphen) or 'yy ss',
+    season case-insensitive.  Returns (season, 4-digit year) or None."""
+    tokens = re.split(r"[^A-Za-z0-9]+", name.strip())
+    if len(tokens) != 2:
+        return None
+    season_tok = year_tok = None
+    for tok in tokens:
+        t = tok.lower()
+        if t in SEASONS:
+            if season_tok is not None:
+                return None
+            season_tok = t
+        elif re.fullmatch(r"\d{2}|\d{4}", t):
+            if year_tok is not None:
+                return None
+            year_tok = t
+        else:
+            return None
+    if season_tok is None or year_tok is None:
+        return None
+    year = int(year_tok) + (0 if len(year_tok) == 4 else 2000)
+    return SEASONS[season_tok], year
+
+
+def references_quarter(text, season, year):
+    """True if text contains the quarter in any accepted form (case-insensitive)."""
+    tokens = [t for t in re.split(r"[^A-Za-z0-9]+", text.strip()) if t]
+    for i in range(len(tokens) - 1):
+        if parse_quarter_name(tokens[i] + " " + tokens[i + 1]) == (season, year):
+            return True
+    return False
+
+
+def is_test_course(name, season, year):
+    """True for courses of the current quarter, or the _Test_Assignment_Uploads course."""
+    return ("_Test_Assignment_Uploads" in name) or references_quarter(name, season, year)
+
 
 parser = argparse.ArgumentParser(description="Upload assignments to Canvas from a schedule file.")
 parser.add_argument("schedule_file", help="Path to schedule file (.ods or .xlsx)")
@@ -33,9 +94,11 @@ print(f"Current User: {user.name} ({user.id})")
 # Step 1: List available courses
 enrollments = user.get_enrollments(enrollment_state=["active"], include=["course"])
 
-target_term_name = "Au 26"
+quarter_season, quarter_year = current_quarter()
+quarter_name = f"{quarter_season} {quarter_year % 100}"
+print(f"Current quarter: {quarter_name} ({quarter_year}-{quarter_season})")
 
-print("\n All courses in:".format(target_term_name))
+print(f"\nAll courses in {quarter_name} (plus _Test_Assignment_Uploads):")
 for enrollment in enrollments:
     cid = enrollment.course_id
 
@@ -45,7 +108,7 @@ for enrollment in enrollments:
     except Exception as e:
         cname = "unknown"
 
-    if target_term_name in cname:
+    if is_test_course(cname, quarter_season, quarter_year):
         print(f"{cid}: {cname}")
 
 # Step 2: Prompt user to select course
