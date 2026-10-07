@@ -1,0 +1,58 @@
+# A script to upload course materials to canvas
+
+It uses a course schedule sheet, and uploads the assignments there on canvas.
+
+## Requirements
+
+1. It should take the course schedule file as its command line
+   argument.  It is assumed to the schedule, in form of either .ods or
+   .xlsx.
+2. It should read the API url and the API key from a file `.env`.
+3. It should calculate the current quarter name.  The name can be in the
+   form "yyyy-ss" where _ss_ is season: either "Au" for autumn, "Wi" for
+   winter, "Sp" for spring and "Su" for summer; in the form "ss yy";
+   or in the form "yy ss".
+   
+   Assume the quarters begin: Autumn on August 1st, Winter on Nov 1st,
+   Spring on Feb 1st, and summer on May 1st.  All years (two digits)
+   should correspond to the current year, except the last two months
+   of the year where they should correspond to the next year.  For
+   instance, 2026-10-07 will correspond to either "2026-Au", "26 Au"
+   or "Au 26".  2026-11-11 will correspond to "2027-Wi", "27 Wi" or
+   "Wi 27".
+   
+   The script should print the current quarter with an appropriate
+   sentence. 
+   
+   In all operations with quarter names, the season case does not
+   matter. 
+4. It should load all the courses for the current quarter, and the
+   user for the course id.  Note that canvas API assumes the quarter
+   is given as "Ss yy".
+2. it should extract the sheet that corresponds to the current
+   quarter.
+   
+   The sheet name should use fuzzy matching, e.g. "Au 2026", "2026
+   au", "26-au" and such are all valid names.
+3. If the script cannot guess the correct name, it should list all
+   sheet names and ask the user to pick one (or to abort).
+3. From this sheet it should extract dates (column "date"), and
+   two types of assignments:
+   problem sets (column "PS") labs (column "Lab").
+   
+   In the column names, "PS" and "Lab" may be followed other
+   information (e.g. weekdays) in parenthesis.
+4. the entries from these columns should be uploaded to canvas.
+5. the script should ask for an offset for each type of
+   assignment--how many days after the given date its deadline
+   should be on canvas.
+6. It should also ask for how many points each assignment type will
+   give. 
+6. the different types of assignments should be uploaded into
+   separate canvas groups, problem sets as "Assignments" and labs as
+   "Labs".
+7. All uploaded assignments' due time should be 23:59 in the given
+   date. 
+7. all uploaded assignments should be "published" on canvas.
+8. All uploaded assignments should be marked as "online upload".
+

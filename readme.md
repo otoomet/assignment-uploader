@@ -9,7 +9,7 @@ It takes an `.ods` or `.xlsx` file and creates assignments in the selected Canva
 1. Install required Python packages:
 
 ```bash
-pip install -r requirements.txt
+pip install -r installation-requirements.txt
 ```
 
 2. Look at `.env-template`.  Rename it to `.env` and replace the

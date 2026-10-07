@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 ## * if schedule file cannot be found
-## * put the quarter name in .env?
 ## * print results in Seattle time zone
 ## * Tell what are the current assignment dates
 ## * suggest 23:59 by default
@@ -169,7 +168,7 @@ for g, col in group_columns.items():
                         group_name_mapping.get(g, g)
                     ],
                     "submission_types": ["online_upload"],
-                    "published": False,
+                    "published": True,
                 }
             )
             print(f"Created {g}: {assignment.name} (due {due_at_str})")
