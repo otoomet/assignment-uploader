@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime, timedelta
 import re
+import sys
 import pytz
 
 CANVAS_TZ = "America/Los_Angeles"
@@ -76,6 +77,31 @@ def is_test_course(name, season, year):
     return ("_Test_Assignment_Uploads" in name) or references_quarter(name, season, year)
 
 
+def select_sheet_name(sheet_names, season, year):
+    """Pick the sheet matching the current quarter.
+
+    Returns the sheet name, or None if the user chose to abort.
+    """
+    matches = [n for n in sheet_names if references_quarter(n, season, year)]
+    if len(matches) == 1:
+        print(f"Using sheet: {matches[0]}")
+        return matches[0]
+
+    print("\nCould not determine the sheet for the current quarter.  Available sheets:")
+    for i, name in enumerate(sheet_names, start=1):
+        print(f"{i}. {name}")
+    while True:
+        choice = input("Enter the number of the sheet to use, or 'a' to abort: ").strip()
+        if choice.lower() in ("a", "abort", "q", "quit"):
+            print("Aborted.")
+            return None
+        if choice.isdigit() and 1 <= int(choice) <= len(sheet_names):
+            name = sheet_names[int(choice) - 1]
+            print(f"Using sheet: {name}")
+            return name
+        print(f"Invalid choice: {choice!r}. Enter a number between 1 and {len(sheet_names)}, or 'a' to abort.")
+
+
 parser = argparse.ArgumentParser(description="Upload assignments to Canvas from a schedule file.")
 parser.add_argument("schedule_file", help="Path to schedule file (.ods or .xlsx)")
 args = parser.parse_args()
@@ -121,12 +147,16 @@ schedule_path = args.schedule_file
 
 # Step 4: Load schedule file
 if schedule_path.endswith(".ods"):
-    sheets = pd.read_excel(schedule_path, sheet_name=None, engine="odf")
-    last_sheet_name = list(sheets.keys())[-1]
-    print(f"Using last sheet: {last_sheet_name}")
-    df = sheets[last_sheet_name]
+    xls = pd.ExcelFile(schedule_path, engine="odf")
+    header_row = 0
 else:
-    df = pd.read_excel(schedule_path, header=1)
+    xls = pd.ExcelFile(schedule_path, engine="openpyxl")
+    header_row = 1
+
+sheet_name = select_sheet_name(xls.sheet_names, quarter_season, quarter_year)
+if sheet_name is None:
+    sys.exit(1)
+df = xls.parse(sheet_name, header=header_row)
 
 
 # Function to extract assignment group name from column name

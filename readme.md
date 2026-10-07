@@ -1,6 +1,6 @@
 # Canvas Assignment Uploader
 
-A command-line tool that uploads course assignments to Canvas automatically.
+A command-line tool that uploads course assignments to Canvas.
 
 It reads a course schedule spreadsheet (`.ods` or `.xlsx`) that contains a
 sheet for the current quarter, finds the date column plus the problem set
@@ -34,29 +34,36 @@ Run the script with the schedule file as the command-line argument:
 ```bash
 python upload_assignments.py path/to/schedule.ods
 ```
-
+or just
+```bash
+./upload_assignments.py path/to/schedule.ods
+```
 Both `.ods` and `.xlsx` files are supported.
 
 Then follow the prompts:
 
 - The current quarter is detected automatically (quarters begin August 1,
   November 1, February 1, and May 1).
-- Choose a course from the listed courses of the current quarter
-  (plus the `_Test_Assignment_Uploads` course) by entering its course ID.
+- It pull the list list of your courses from the canvas, filters the
+  courses for the current quarter only
+  (plus the `_Test_Assignment_Uploads` course).  Note: this is slow.
+  
+  Choose the course by entering its course ID.
 - The sheet matching the current quarter is detected automatically
   (fuzzy match, e.g. "Au 26", "26 au", "2026-Au").  If it cannot be
-  determined, all sheet names are listed and you can pick one or abort.
+  determined, all sheet names are listed and you can pick one.
 - For each assignment type, enter the due-date offset in days (the
   deadline is set to 23:59 on schedule date + offset) and the points
   possible.
 
 Assignments are uploaded to the existing Canvas assignment groups —
-"Assignments" for problem sets and "Labs" for labs (created if missing) —
-marked as online upload submissions and published.
+"Assignments" for problem sets and "Labs" for labs (created if missing).
+They are marked as "online upload" submissions and "published".
 
 ### Schedule file format
 
-The file must contain a sheet for the current quarter (fuzzy-matched by
+The file must contain a sheet for the current quarter, e.g. "Au 2026"
+or "26-au" (fuzzy-matched by
 name).  Within that sheet:
 
 - a `date` column with the schedule dates;

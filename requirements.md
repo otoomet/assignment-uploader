@@ -34,35 +34,35 @@ It uses a course schedule sheet, and uploads the assignments there on canvas.
 5. Besides the courses that correspond to the current quarter, it
    should also print a course names "_Test_Assignment_Uploads" (the
    name includes underscores).
-4. It should load all the courses for the current quarter, and the
-   user for the course id.  Note that canvas API assumes the quarter
-   is given as "Ss yy".
-2. it should extract the sheet that corresponds to the current
-   quarter.
-   
-   The sheet name should use fuzzy matching, e.g. "Au 2026", "2026
-   au", "26-au" and such are all valid names.
-3. If the script cannot guess the correct name, it should list all
-   sheet names and ask the user to pick one (or to abort).
-3. From this sheet it should extract dates (column "date"), and
-   two types of assignments:
-   problem sets (column "PS") labs (column "Lab").
-   
-   In the column names, "PS" and "Lab" may be followed other
-   information (e.g. weekdays) in parenthesis.
-4. the entries from these columns should be uploaded to canvas.
-5. the script should ask for an offset for each type of
-   assignment--how many days after the given date its deadline
-   should be on canvas.
-6. It should also ask for how many points each assignment type will
-   give. 
-6. the different types of assignments should be uploaded into
-   separate canvas groups, problem sets as "Assignments" and labs as
-   "Labs".
-7. All uploaded assignments' due time should be 23:59 in the given
-   date. 
-7. all uploaded assignments should be "published" on canvas.
-8. All uploaded assignments should be marked as "online upload".
+ 6. It should load all the courses for the current quarter, and the
+    user for the course id.  Note that canvas API assumes the quarter
+    is given as "Ss yy".
+ 7. it should extract the sheet that corresponds to the current
+    quarter.
+    
+    The sheet name should use fuzzy matching, e.g. "Au 2026", "2026
+    au", "26-au" and such are all valid names.
+ 8. If the script cannot guess the correct name, it should list all
+    sheet names and ask the user to pick one (or to abort).
+ 9. From this sheet it should extract dates (column "date"), and
+    two types of assignments:
+    problem sets (column "PS") labs (column "Lab").
+    
+    In the column names, "PS" and "Lab" may be followed other
+    information (e.g. weekdays) in parenthesis.
+ 10. the entries from these columns should be uploaded to canvas.
+ 11. the script should ask for an offset for each type of
+     assignment--how many days after the given date its deadline
+     should be on canvas.
+ 12. It should also ask for how many points each assignment type will
+     give. 
+ 13. the different types of assignments should be uploaded into
+     separate canvas groups, problem sets as "Assignments" and labs as
+     "Labs".
+ 14. All uploaded assignments' due time should be 23:59 in the given
+     date. 
+ 15. all uploaded assignments should be "published" on canvas.
+ 16. All uploaded assignments should be marked as "online upload".
 
 
 ## Readme file
