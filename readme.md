@@ -19,6 +19,12 @@ type, with customizable due-date offsets and point values.
 2. Create a `.env` file in the project directory with your Canvas
    credentials.  It can be started from the `.env-template` file:
 
+   ```bash
+   cp .env-template .env
+   ```
+
+   and then edit it to set both values:
+
    ```env
    API_URL=https://canvas.yourschool.edu/api/v1
    API_KEY=your_canvas_api_key
@@ -26,6 +32,13 @@ type, with customizable due-date offsets and point values.
 
    You can obtain an API key from Canvas: *Account → Settings →
    New Access Token*.
+
+   The `.env` file must be readable only by you (mode 600); the script
+   refuses to run otherwise:
+
+   ```bash
+   chmod 600 .env
+   ```
 
 ## Usage
 

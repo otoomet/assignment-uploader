@@ -115,10 +115,58 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-# Load .env
-load_dotenv()
-canvas_api_url = os.getenv("API_URL")
-canvas_api_token = os.getenv("API_KEY")
+def fail(msg):
+    """Print an error message to stderr and exit with a non-zero status."""
+    print(f"Error: {msg}", file=sys.stderr)
+    sys.exit(1)
+
+
+def check_env_file(env_path=".env"):
+    """Validate the .env file (exists, mode 600, defines API_URL & API_KEY).
+
+    Returns (api_url, api_key) once the file has been loaded.
+    """
+    if not os.path.isfile(env_path):
+        fail(
+            f".env file not found: {env_path}\n"
+            f"       Create it (e.g. from .env-template) with API_URL and API_KEY."
+        )
+
+    mode = os.stat(env_path).st_mode & 0o777
+    if mode & 0o077:
+        fail(
+            f".env file has insecure permissions {oct(mode)} — it may be "
+            f"readable by other users.\n"
+            f"       It must be readable only by you (mode 600).\n"
+            f"       Fix with: chmod 600 {env_path}"
+        )
+
+    load_dotenv(env_path)
+    missing = [
+        name
+        for name in ("API_URL", "API_KEY")
+        if not os.getenv(name)
+    ]
+    if missing:
+        fail(
+            ".env file is missing required value(s): "
+            + ", ".join(missing)
+            + "\n       Both API_URL and API_KEY must be set."
+        )
+
+    return os.getenv("API_URL"), os.getenv("API_KEY")
+
+
+# Fail fast if the schedule file does not exist.
+if not os.path.isfile(args.schedule_file):
+    fail(
+        f"schedule file not found: {args.schedule_file}\n"
+        f"       Please pass a valid .ods or .xlsx file as the command-line argument."
+    )
+
+
+# Load and validate .env
+canvas_api_url, canvas_api_token = check_env_file()
 
 # Connect to Canvas
 canvas = Canvas(canvas_api_url, canvas_api_token)

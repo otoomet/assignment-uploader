@@ -10,7 +10,13 @@ It uses a course schedule sheet, and uploads the assignments there on canvas.
 2. There should also be an option to enter the course id on command
    line, e.g. `-i/--id`.  (Id is an integer and does not contain spaces or
    special characters.)
-2. It should read the API url and the API key from a file `.env`.
+3. It should read the API url and the API key from a file `.env`.
+   This file should only be readable by the user, not by the world
+   (mode 600).
+   
+   if `.env` does not exist, does not contain the url and API key, or
+   has wrong mode, then
+   it should produce a corresponding error message.
 3. It should calculate the current quarter name.  The name can be in the
    form "yyyy-ss" where _ss_ is season: either "Au" for autumn, "Wi" for
    winter, "Sp" for spring and "Su" for summer; in the form "ss yy";
