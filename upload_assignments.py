@@ -3,7 +3,6 @@
 ## * if schedule file cannot be found
 ## * print results in Seattle time zone
 ## * Tell what are the current assignment dates
-## * suggest 23:59 by default
 
 import argparse
 import pandas as pd
@@ -18,6 +17,7 @@ import pytz
 CANVAS_TZ = "America/Los_Angeles"
 SEASONS = {"au": "Au", "wi": "Wi", "sp": "Sp", "su": "Su"}
 ASSIGNMENT_TYPES = ("PS", "Lab", "Quiz", "Project")
+DUE_TIME = "23:59"
 
 
 def current_quarter(ref=None):
@@ -212,8 +212,7 @@ group_config = {}
 for g in group_columns.keys():
     offset = int(input(f"Enter due date offset (days) for {g}: "))
     points = int(input(f"Enter points possible for {g}: "))
-    due_time_str = input(f"Enter due time (HH:MM, 24-hour) for {g}: ")
-    group_config[g] = {"offset": offset, "points": points, "due_time": due_time_str}
+    group_config[g] = {"offset": offset, "points": points}
 
 # Step 7: Fetch or create assignment groups
 group_name_mapping = {
@@ -243,11 +242,11 @@ for g, col in group_columns.items():
         if pd.notna(title):
             due_date = base_date + timedelta(days=group_config[g]["offset"])
 
-            # Combine date + time
+            # Combine date + time (all deadlines due at 23:59 local time)
             local_due = pacific.localize(
                 datetime.combine(
                     due_date.date(),
-                    datetime.strptime(group_config[g]["due_time"], "%H:%M").time(),
+                    datetime.strptime(DUE_TIME, "%H:%M").time(),
                 )
             )
 
@@ -267,7 +266,8 @@ for g, col in group_columns.items():
                     "published": True,
                 }
             )
-            print(f"Created {g}: {assignment.name} (due {due_at_str})")
+            due_human = local_due.strftime("%Y-%m-%d %H:%M")
+            print(f"Created {g}: {assignment.name} (due {due_human})")
 
 
 print("\nAll assignments uploaded.")

@@ -52,9 +52,9 @@ Then follow the prompts:
 - The sheet matching the current quarter is detected automatically
   (fuzzy match, e.g. "Au 26", "26 au", "2026-Au").  If it cannot be
   determined, all sheet names are listed and you can pick one.
-- For each assignment type, enter the due-date offset in days (the
-  deadline is set to 23:59 on schedule date + offset) and the points
-  possible.
+- For each assignment type, enter the due-date offset in days and the
+  points possible.  The deadline is always set to 23:59 on (schedule date
+  + offset).
 
 Assignments are uploaded to the existing Canvas assignment groups —
 "Assignments" for problem sets, "Quizzes" for quizzes and "Labs" for labs
