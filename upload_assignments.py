@@ -17,6 +17,7 @@ import pytz
 
 CANVAS_TZ = "America/Los_Angeles"
 SEASONS = {"au": "Au", "wi": "Wi", "sp": "Sp", "su": "Su"}
+ASSIGNMENT_TYPES = ("PS", "Lab", "Quiz", "Project")
 
 
 def current_quarter(ref=None):
@@ -159,11 +160,13 @@ if sheet_name is None:
 df = xls.parse(sheet_name, header=header_row)
 
 
-# Function to extract assignment group name from column name
+# Function to extract assignment group name from column name.
+# The assignment type marker (PS, Lab, Quiz, ...) may or may not be
+# followed by extra information (e.g. weekdays) in parenthesis.
 def parse_group_name(colname):
-    m = re.match(r"(.*) \(", colname)
-    if m:
-        return m.group(1).strip()
+    for atype in ASSIGNMENT_TYPES:
+        if re.match(rf"^{atype}\b", colname, re.IGNORECASE):
+            return atype
     return None
 
 
@@ -194,7 +197,7 @@ for g in groups:
 # Detect assignment groups from columns
 group_columns = {}
 for col in df.columns:
-    col_clean = col.strip()
+    col_clean = str(col).strip()
     group = parse_group_name(col_clean)
     if group and group not in skip_columns:
         group_columns[group] = col

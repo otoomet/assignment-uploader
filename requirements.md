@@ -45,19 +45,28 @@ It uses a course schedule sheet, and uploads the assignments there on canvas.
  8. If the script cannot guess the correct name, it should list all
     sheet names and ask the user to pick one (or to abort).
  9. From this sheet it should extract dates (column "date"), and
-    two types of assignments:
-    problem sets (column "PS") labs (column "Lab").
+    three types of assignments:
+    problem sets (column "PS"), labs (column "Lab") and quizzes
+    (column "Quiz").
     
-    In the column names, "PS" and "Lab" may be followed other
+    The assignment type markers ("PS", "Quiz" and "Lab") may be followed other
     information (e.g. weekdays) in parenthesis.
  10. the entries from these columns should be uploaded to canvas.
  11. the script should ask for an offset for each type of
      assignment--how many days after the given date its deadline
      should be on canvas.
+	 
+	 When asking the offset, it should show the current weekday of
+     that assignment type with an appropriate message.
+	 
+	 If the assignments are marked on different weekdays, it should
+     show both, for instance "Currently Monday (5)/Wednesday (1)"
+     meaning it was marked for Monday 5 times and for Wednesday once.
  12. It should also ask for how many points each assignment type will
      give. 
  13. the different types of assignments should be uploaded into
-     separate canvas groups, problem sets as "Assignments" and labs as
+     separate canvas groups, problem sets as "Assignments", quizzes as
+     "Quizzes" and labs as
      "Labs".
  14. All uploaded assignments' due time should be 23:59 in the given
      date. 

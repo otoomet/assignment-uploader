@@ -3,10 +3,10 @@
 A command-line tool that uploads course assignments to Canvas.
 
 It reads a course schedule spreadsheet (`.ods` or `.xlsx`) that contains a
-sheet for the current quarter, finds the date column plus the problem set
-(`PS ...`) and lab (`Lab ...`) columns, and creates the corresponding
-assignments in a Canvas course — one group per assignment type, with
-customizable due-date offsets and point values.
+sheet for the current quarter, finds the date column plus the problem-set
+(`PS ...`), lab (`Lab ...`) and quiz (`Quiz ...`) columns, and creates the
+corresponding assignments in a Canvas course — one group per assignment
+type, with customizable due-date offsets and point values.
 
 ## Installation
 
@@ -57,7 +57,8 @@ Then follow the prompts:
   possible.
 
 Assignments are uploaded to the existing Canvas assignment groups —
-"Assignments" for problem sets and "Labs" for labs (created if missing).
+"Assignments" for problem sets, "Quizzes" for quizzes and "Labs" for labs
+(created if missing).
 They are marked as "online upload" submissions and "published".
 
 ### Schedule file format
@@ -67,8 +68,10 @@ or "26-au" (fuzzy-matched by
 name).  Within that sheet:
 
 - a `date` column with the schedule dates;
-- a problem-set column named like `PS (extra info)`;
-- a lab column named like `Lab (extra info)`.
+- problem-set, lab and quiz columns whose names start with the assignment
+  type marker `PS`, `Lab` or `Quiz`;
+- the markers may optionally be followed by extra information in
+  parentheses (e.g. weekdays), which is ignored.  All of `PS`,
+  `PS (Mon night)`, `Quiz` and `Lab (Tue, Wed)` are valid column names.
 
-Everything in the parentheses (e.g. the day of the week) is optional;
-entries in those columns are used as the assignment titles.
+Entries in those columns are used as the assignment titles.
