@@ -105,6 +105,13 @@ def select_sheet_name(sheet_names, season, year):
 
 parser = argparse.ArgumentParser(description="Upload assignments to Canvas from a schedule file.")
 parser.add_argument("schedule_file", help="Path to schedule file (.ods or .xlsx)")
+parser.add_argument(
+    "-i", "--id",
+    dest="course_id",
+    type=int,
+    metavar="ID",
+    help="Canvas course ID to upload into (skips the course-selection prompt).",
+)
 args = parser.parse_args()
 
 
@@ -118,28 +125,32 @@ canvas = Canvas(canvas_api_url, canvas_api_token)
 user = canvas.get_current_user()
 print(f"Current User: {user.name} ({user.id})")
 
-# Step 1: List available courses
-enrollments = user.get_enrollments(enrollment_state=["active"], include=["course"])
-
 quarter_season, quarter_year = current_quarter()
 quarter_name = f"{quarter_season} {quarter_year % 100}"
 print(f"Current quarter: {quarter_name} ({quarter_year}-{quarter_season})")
 
-print(f"\nAll courses in {quarter_name} (plus _Test_Assignment_Uploads):")
-for enrollment in enrollments:
-    cid = enrollment.course_id
+# Step 1: Determine the course id
+if args.course_id is not None:
+    course_id = args.course_id
+else:
+    enrollments = user.get_enrollments(enrollment_state=["active"], include=["course"])
 
-    try:
-        course = canvas.get_course(cid)
-        cname = course.name
-    except Exception as e:
-        cname = "unknown"
+    print(f"\nAll courses in {quarter_name} (plus _Test_Assignment_Uploads):")
+    for enrollment in enrollments:
+        cid = enrollment.course_id
 
-    if is_test_course(cname, quarter_season, quarter_year):
-        print(f"{cid}: {cname}")
+        try:
+            course = canvas.get_course(cid)
+            cname = course.name
+        except Exception as e:
+            cname = "unknown"
 
-# Step 2: Prompt user to select course
-course_id = int(input("\nInput Course ID: "))
+        if is_test_course(cname, quarter_season, quarter_year):
+            print(f"{cid}: {cname}")
+
+    # Step 2: Prompt user to select course
+    course_id = int(input("\nInput Course ID: "))
+
 course = canvas.get_course(course_id)
 print(f"Selected course: {course.name}")
 

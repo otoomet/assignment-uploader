@@ -40,6 +40,13 @@ or just
 ```
 Both `.ods` and `.xlsx` files are supported.
 
+Optionally pass the Canvas course ID with `-i`/`--id` to skip the
+course-selection prompt:
+
+```bash
+python upload_assignments.py path/to/schedule.ods --id 12345
+```
+
 Then follow the prompts:
 
 - The current quarter is detected automatically (quarters begin August 1,
@@ -47,8 +54,10 @@ Then follow the prompts:
 - It pull the list list of your courses from the canvas, filters the
   courses for the current quarter only
   (plus the `_Test_Assignment_Uploads` course).  Note: this is slow.
-  
-  Choose the course by entering its course ID.
+
+  Choose the course by entering its course ID.  If you passed `-i`/`--id`
+  on the command line, this step (and the listing) is skipped and that
+  course is used directly.
 - The sheet matching the current quarter is detected automatically
   (fuzzy match, e.g. "Au 26", "26 au", "2026-Au").  If it cannot be
   determined, all sheet names are listed and you can pick one.
