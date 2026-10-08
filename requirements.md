@@ -7,6 +7,9 @@ It uses a course schedule sheet, and uploads the assignments there on canvas.
 1. It should take the course schedule file as its command line
    argument.  It is assumed to the schedule, in form of either .ods or
    .xlsx.
+2. There should also be an option to enter the course id on command
+   line, e.g. `-i/--id`.  (Id is an integer and does not contain spaces or
+   special characters.)
 2. It should read the API url and the API key from a file `.env`.
 3. It should calculate the current quarter name.  The name can be in the
    form "yyyy-ss" where _ss_ is season: either "Au" for autumn, "Wi" for
@@ -56,7 +59,8 @@ It uses a course schedule sheet, and uploads the assignments there on canvas.
      assignment--how many days after the given date its deadline
      should be on canvas.
 	 
-	 When asking the offset, it should show the current weekday of
+	 When asking the offset, it should show the current weekday (the
+     one based on the "date" column) of
      that assignment type with an appropriate message.
 	 
 	 If the assignments are marked on different weekdays, it should

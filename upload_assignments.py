@@ -170,6 +170,37 @@ def parse_group_name(colname):
     return None
 
 
+def assignment_weekday_hint(sched_col, date_col):
+    """Build a human hint of on which weekday(s) the type's assignments fall.
+
+    Counts, over the non-empty assignment rows, how many dates land on each
+    weekday.  Returns e.g. "Currently Monday" or
+    "Currently Monday (5)/Wednesday (1)".  Count-less weekdays are dropped.
+    """
+    counts = {}
+    order = []
+    for _, row in df.iterrows():
+        if pd.isna(row[sched_col]):
+            continue
+        try:
+            d = pd.to_datetime(row[date_col])
+        except (ValueError, TypeError):
+            continue
+        if pd.isna(d):
+            continue
+        name = d.strftime("%A")
+        if name not in counts:
+            counts[name] = 0
+            order.append(name)
+        counts[name] += 1
+    if not order:
+        return ""
+    if len(order) == 1:
+        return f"Currently {order[0]}"
+    parts = [f"{name} ({counts[name]})" for name in order]
+    return "Currently " + "/".join(parts)
+
+
 # Show all columns found in schedule
 print("\nColumns found in schedule:")
 for col in df.columns:
@@ -209,8 +240,12 @@ for g in group_columns.keys():
 
 # Step 6: Prompt user to input settings for each assignment group
 group_config = {}
-for g in group_columns.keys():
-    offset = int(input(f"Enter due date offset (days) for {g}: "))
+for g, col in group_columns.items():
+    hint = assignment_weekday_hint(col, "date")
+    offset = int(input(
+        f"Enter due date offset (days) for {g} "
+        f"{'— ' + hint if hint else ''}: "
+    ))
     points = int(input(f"Enter points possible for {g}: "))
     group_config[g] = {"offset": offset, "points": points}
 

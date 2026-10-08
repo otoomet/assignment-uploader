@@ -54,7 +54,10 @@ Then follow the prompts:
   determined, all sheet names are listed and you can pick one.
 - For each assignment type, enter the due-date offset in days and the
   points possible.  The deadline is always set to 23:59 on (schedule date
-  + offset).
+  + offset).  When asking for the offset, the prompt shows the weekday the
+  type's assignments currently fall on, e.g. "Currently Monday" or
+  "Currently Monday (5)/Wednesday (1)" if they are entered on
+  different weekdays.
 
 Assignments are uploaded to the existing Canvas assignment groups —
 "Assignments" for problem sets, "Quizzes" for quizzes and "Labs" for labs
