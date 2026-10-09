@@ -229,17 +229,33 @@ def parse_group_name(colname):
     return None
 
 
+# Placeholder cells that mean "there is no assignment this week", e.g.
+# "No lab" or "No quiz".  These should not be uploaded.  Matching is
+# case-insensitive and word boundary aware, so real titles like
+# "PS4: data manipulations (no groups)" are left alone.
+NO_ASSIGNMENT_RE = re.compile(
+    r"\bno\s+(ps|problem\s+sets?|labs?|quiz(zes)?|tests?|exams?)\b",
+    re.IGNORECASE,
+)
+
+
+def is_no_assignment(title):
+    """True if a schedule cell is a 'no <assignment>' placeholder to skip."""
+    return bool(NO_ASSIGNMENT_RE.search(str(title)))
+
+
 def assignment_weekday_hint(sched_col, date_col):
     """Build a human hint of on which weekday(s) the type's assignments fall.
 
-    Counts, over the non-empty assignment rows, how many dates land on each
-    weekday.  Returns e.g. "Currently Monday" or
+    Counts, over the non-empty non-placeholder assignment rows, how many
+    dates land on each weekday.  "No lab"/"no quiz" style placeholder rows
+    are excluded.  Returns e.g. "Currently Monday" or
     "Currently Monday (5)/Wednesday (1)".  Count-less weekdays are dropped.
     """
     counts = {}
     order = []
     for _, row in df.iterrows():
-        if pd.isna(row[sched_col]):
+        if pd.isna(row[sched_col]) or is_no_assignment(row[sched_col]):
             continue
         try:
             d = pd.to_datetime(row[date_col])
@@ -331,37 +347,39 @@ pacific = pytz.timezone("America/Los_Angeles")
 # Step 8: Upload assignments to Canvas
 for g, col in group_columns.items():
     for i, row in df.iterrows():
-        base_date = pd.to_datetime(row["date"])
         title = row[col]
-        if pd.notna(title):
-            due_date = base_date + timedelta(days=group_config[g]["offset"])
+        # Skip empty cells and "no lab"/"no quiz" style placeholders.
+        if pd.isna(title) or is_no_assignment(title):
+            continue
+        base_date = pd.to_datetime(row["date"])
+        due_date = base_date + timedelta(days=group_config[g]["offset"])
 
-            # Combine date + time (all deadlines due at 23:59 local time)
-            local_due = pacific.localize(
-                datetime.combine(
-                    due_date.date(),
-                    datetime.strptime(DUE_TIME, "%H:%M").time(),
-                )
+        # Combine date + time (all deadlines due at 23:59 local time)
+        local_due = pacific.localize(
+            datetime.combine(
+                due_date.date(),
+                datetime.strptime(DUE_TIME, "%H:%M").time(),
             )
+        )
 
-            # Convert to UTC
-            utc_due = local_due.astimezone(pytz.utc)
-            due_at_str = utc_due.strftime("%Y-%m-%dT%H:%M:%SZ")
+        # Convert to UTC
+        utc_due = local_due.astimezone(pytz.utc)
+        due_at_str = utc_due.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-            assignment = course.create_assignment(
-                assignment={
-                    "name": f"{g}: {title}",
-                    "points_possible": group_config[g]["points"],
-                    "due_at": due_at_str,
-                    "assignment_group_id": group_name_to_id[
-                        group_name_mapping.get(g, g)
-                    ],
-                    "submission_types": ["online_upload"],
-                    "published": True,
-                }
-            )
-            due_human = local_due.strftime("%Y-%m-%d %H:%M")
-            print(f"Created {g}: {assignment.name} (due {due_human})")
+        assignment = course.create_assignment(
+            assignment={
+                "name": f"{g}: {title}",
+                "points_possible": group_config[g]["points"],
+                "due_at": due_at_str,
+                "assignment_group_id": group_name_to_id[
+                    group_name_mapping.get(g, g)
+                ],
+                "submission_types": ["online_upload"],
+                "published": True,
+            }
+        )
+        due_human = local_due.strftime("%Y-%m-%d %H:%M")
+        print(f"Created {g}: {assignment.name} (due {due_human})")
 
 
 print("\nAll assignments uploaded.")

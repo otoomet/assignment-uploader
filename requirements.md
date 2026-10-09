@@ -4,20 +4,26 @@ It uses a course schedule sheet, and uploads the assignments there on canvas.
 
 ## Requirements
 
-1. It should take the course schedule file as its command line
+### Command-line options
+
+1. The script should take the course schedule file as its command line
    argument.  It is assumed to the schedule, in form of either .ods or
    .xlsx.
 2. There should also be an option to enter the course id on command
    line, e.g. `-i/--id`.  (Id is an integer and does not contain spaces or
    special characters.)
-3. It should read the API url and the API key from a file `.env`.
+ 
+ 
+### Other rquirements
+   
+1. It should read the API url and the API key from a file `.env`.
    This file should only be readable by the user, not by the world
    (mode 600).
    
    if `.env` does not exist, does not contain the url and API key, or
    has wrong mode, then
    it should produce a corresponding error message.
-3. It should calculate the current quarter name.  The name can be in the
+1. It should calculate the current quarter name.  The name can be in the
    form "yyyy-ss" where _ss_ is season: either "Au" for autumn, "Wi" for
    winter, "Sp" for spring and "Su" for summer; in the form "ss yy";
    or in the form "yy ss".
@@ -35,14 +41,18 @@ It uses a course schedule sheet, and uploads the assignments there on canvas.
    
    In all operations with quarter names, the season case does not
    matter. 
-4. The script should get the list of all courses, and extract the
-   courses that correspond to the current quarter.  The course names
-   look like "Course code letter Ss yy: course name", where _Ss yy_ is
-   the quarter.  For instance, a course name may be
-   "INFO 370 C Au 26: Core Methods In Data Science".
-5. Besides the courses that correspond to the current quarter, it
-   should also print a course names "_Test_Assignment_Uploads" (the
-   name includes underscores).
+4. If the course id was not provided on the command line,
+   then the script should:
+   
+   - get the list of all courses, and extract the
+     courses that correspond to the current quarter.  The course names
+     look like "Course code letter Ss yy: course name", where _Ss yy_ is
+     the quarter.  For instance, a course name may be
+     "INFO 370 C Au 26: Core Methods In Data Science".
+   
+   - Besides the courses that correspond to the current quarter, it
+     should also print a course names "_Test_Assignment_Uploads" (the
+     name includes underscores).
  6. It should load all the courses for the current quarter, and the
     user for the course id.  Note that canvas API assumes the quarter
     is given as "Ss yy".
