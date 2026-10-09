@@ -7,23 +7,23 @@ It uses a course schedule sheet, and uploads the assignments there on canvas.
 ### Command-line options
 
 1. The script should take the course schedule file as its command line
-   argument.  It is assumed to the schedule, in form of either .ods or
-   .xlsx.
+   argument.  It is assumed that it is either an .ods or
+   .xlsx file.
 2. There should also be an option to enter the course id on command
-   line, e.g. `-i/--id`.  (Id is an integer and does not contain spaces or
-   special characters.)
+   line, e.g. `-i/--id`.  (The course id is an integer and does not
+   contain spaces or special characters.)
  
  
-### Other rquirements
-   
+### Other requirements
+
 1. It should read the API url and the API key from a file `.env`.
-   This file should only be readable by the user, not by the world
-   (mode 600).
-   
-   if `.env` does not exist, does not contain the url and API key, or
-   has wrong mode, then
-   it should produce a corresponding error message.
-1. It should calculate the current quarter name.  The name can be in the
+    This file should only be readable by the user, not by the world
+    (mode 600).
+    
+    if `.env` does not exist, does not contain the url and API key, or
+    has wrong mode, then
+    it should produce a corresponding error message.
+2. It should calculate the current quarter name.  The name can be in the
    form "yyyy-ss" where _ss_ is season: either "Au" for autumn, "Wi" for
    winter, "Sp" for spring and "Su" for summer; in the form "ss yy";
    or in the form "yy ss".
@@ -41,7 +41,7 @@ It uses a course schedule sheet, and uploads the assignments there on canvas.
    
    In all operations with quarter names, the season case does not
    matter. 
-4. If the course id was not provided on the command line,
+ 3. If the course id was not provided on the command line,
    then the script should:
    
    - get the list of all courses, and extract the
@@ -53,45 +53,48 @@ It uses a course schedule sheet, and uploads the assignments there on canvas.
    - Besides the courses that correspond to the current quarter, it
      should also print a course names "_Test_Assignment_Uploads" (the
      name includes underscores).
- 6. It should load all the courses for the current quarter, and the
-    user for the course id.  Note that canvas API assumes the quarter
-    is given as "Ss yy".
- 7. it should extract the sheet that corresponds to the current
-    quarter.
+4. It should load all the courses for the current quarter, and the
+   user for the course id.  Note that canvas API assumes the quarter
+   is given as "Ss yy".
+5. it should extract the sheet that corresponds to the current
+   quarter.
+   
+   The sheet name should use fuzzy matching, e.g. "Au 2026", "2026
+   au", "26-au" and such are all valid names.
+6. If the script cannot guess the correct name, it should list all
+   sheet names and ask the user to pick one (or to abort).
+7. From this sheet it should extract dates (column "date"), and
+   three types of assignments:
+   problem sets (column "PS"), labs (column "Lab") and quizzes
+   (column "Quiz").
+   
+   The assignment type markers ("PS", "Quiz" and "Lab") may be followed other
+   information (e.g. weekdays) in parenthesis.
+ 8. the entries from these columns should be uploaded to canvas.
+   Placeholder cells that mean "there is no assignment this week"
+   (e.g. "No lab", "No quiz", "No PS") should be detected and skipped,
+   not uploaded.
+ 9. the script should ask for an offset for each type of
+    assignment--how many days after the given date its deadline
+    should be on canvas.
     
-    The sheet name should use fuzzy matching, e.g. "Au 2026", "2026
-    au", "26-au" and such are all valid names.
- 8. If the script cannot guess the correct name, it should list all
-    sheet names and ask the user to pick one (or to abort).
- 9. From this sheet it should extract dates (column "date"), and
-    three types of assignments:
-    problem sets (column "PS"), labs (column "Lab") and quizzes
-    (column "Quiz").
+    When asking the offset, it should show the current weekday (the
+    one based on the "date" column) of
+    that assignment type with an appropriate message.
     
-    The assignment type markers ("PS", "Quiz" and "Lab") may be followed other
-    information (e.g. weekdays) in parenthesis.
- 10. the entries from these columns should be uploaded to canvas.
- 11. the script should ask for an offset for each type of
-     assignment--how many days after the given date its deadline
-     should be on canvas.
-	 
-	 When asking the offset, it should show the current weekday (the
-     one based on the "date" column) of
-     that assignment type with an appropriate message.
-	 
-	 If the assignments are marked on different weekdays, it should
-     show both, for instance "Currently Monday (5)/Wednesday (1)"
-     meaning it was marked for Monday 5 times and for Wednesday once.
- 12. It should also ask for how many points each assignment type will
-     give. 
- 13. the different types of assignments should be uploaded into
+    If the assignments are marked on different weekdays, it should
+    show both, for instance "Currently Monday (5)/Wednesday (1)"
+    meaning it was marked for Monday 5 times and for Wednesday once.
+ 10. It should also ask for how many points each assignment type will
+     give.
+ 11. the different types of assignments should be uploaded into
      separate canvas groups, problem sets as "Assignments", quizzes as
      "Quizzes" and labs as
      "Labs".
- 14. All uploaded assignments' due time should be 23:59 in the given
-     date. 
- 15. all uploaded assignments should be "published" on canvas.
- 16. All uploaded assignments should be marked as "online upload".
+ 12. All uploaded assignments' due time should be 23:59 in the given
+     date.
+ 13. all uploaded assignments should be "published" on canvas.
+ 14. All uploaded assignments should be marked as "online upload".
 
 
 ## Readme file

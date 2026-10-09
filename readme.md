@@ -100,3 +100,9 @@ name).  Within that sheet:
   `PS (Mon night)`, `Quiz` and `Lab (Tue, Wed)` are valid column names.
 
 Entries in those columns are used as the assignment titles.
+
+Placeholder cells that mean "there is no assignment this week" — e.g.
+`No lab`, `No quiz`, `No PS`, `No test`, `No exam` (matched case-insensitively)
+— are detected and skipped; they are not uploaded and are not counted when
+detecting the weekdays the type's assignments fall on.  Real titles such as
+`PS4: data manipulations (no groups)` are unaffected.
