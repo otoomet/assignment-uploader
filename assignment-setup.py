@@ -1,81 +1,26 @@
 #!/usr/bin/env python
 
-## * if schedule file cannot be found
 ## * print results in Seattle time zone
 ## * Tell what are the current assignment dates
 
 import argparse
 import pandas as pd
-from canvasapi import Canvas
-from dotenv import load_dotenv
 import os
 from datetime import datetime, timedelta
 import re
 import sys
 import pytz
 
-CANVAS_TZ = "America/Los_Angeles"
-SEASONS = {"au": "Au", "wi": "Wi", "sp": "Sp", "su": "Su"}
+from canvas_common import (
+    fail,
+    connect,
+    print_current_quarter,
+    references_quarter,
+    select_course,
+)
+
 ASSIGNMENT_TYPES = ("PS", "Lab", "Quiz", "Project")
 DUE_TIME = "23:59"
-
-
-def current_quarter(ref=None):
-    """Return (season, year) of the quarter containing ref (default: now in CANVAS_TZ).
-
-    Quarters begin: Autumn Aug 1, Winter Nov 1, Spring Feb 1, Summer May 1.
-    """
-    if ref is None:
-        ref = datetime.now(pytz.timezone(CANVAS_TZ))
-    m = ref.month
-    if m in (8, 9, 10):
-        return "Au", ref.year
-    if m in (11, 12):
-        return "Wi", ref.year + 1
-    if m == 1:
-        return "Wi", ref.year
-    if m in (2, 3, 4):
-        return "Sp", ref.year
-    return "Su", ref.year
-
-
-def parse_quarter_name(name):
-    """Parse a quarter name in any of 'yyyy-ss', 'ss yy' (space/hyphen) or 'yy ss',
-    season case-insensitive.  Returns (season, 4-digit year) or None."""
-    tokens = re.split(r"[^A-Za-z0-9]+", name.strip())
-    if len(tokens) != 2:
-        return None
-    season_tok = year_tok = None
-    for tok in tokens:
-        t = tok.lower()
-        if t in SEASONS:
-            if season_tok is not None:
-                return None
-            season_tok = t
-        elif re.fullmatch(r"\d{2}|\d{4}", t):
-            if year_tok is not None:
-                return None
-            year_tok = t
-        else:
-            return None
-    if season_tok is None or year_tok is None:
-        return None
-    year = int(year_tok) + (0 if len(year_tok) == 4 else 2000)
-    return SEASONS[season_tok], year
-
-
-def references_quarter(text, season, year):
-    """True if text contains the quarter in any accepted form (case-insensitive)."""
-    tokens = [t for t in re.split(r"[^A-Za-z0-9]+", text.strip()) if t]
-    for i in range(len(tokens) - 1):
-        if parse_quarter_name(tokens[i] + " " + tokens[i + 1]) == (season, year):
-            return True
-    return False
-
-
-def is_test_course(name, season, year):
-    """True for courses of the current quarter, or the _Test_Assignment_Uploads course."""
-    return ("_Test_Assignment_Uploads" in name) or references_quarter(name, season, year)
 
 
 def select_sheet_name(sheet_names, season, year):
@@ -115,48 +60,6 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-def fail(msg):
-    """Print an error message to stderr and exit with a non-zero status."""
-    print(f"Error: {msg}", file=sys.stderr)
-    sys.exit(1)
-
-
-def check_env_file(env_path=".env"):
-    """Validate the .env file (exists, mode 600, defines API_URL & API_KEY).
-
-    Returns (api_url, api_key) once the file has been loaded.
-    """
-    if not os.path.isfile(env_path):
-        fail(
-            f".env file not found: {env_path}\n"
-            f"       Create it (e.g. from .env-template) with API_URL and API_KEY."
-        )
-
-    mode = os.stat(env_path).st_mode & 0o777
-    if mode & 0o077:
-        fail(
-            f".env file has insecure permissions {oct(mode)} — it may be "
-            f"readable by other users.\n"
-            f"       It must be readable only by you (mode 600).\n"
-            f"       Fix with: chmod 600 {env_path}"
-        )
-
-    load_dotenv(env_path)
-    missing = [
-        name
-        for name in ("API_URL", "API_KEY")
-        if not os.getenv(name)
-    ]
-    if missing:
-        fail(
-            ".env file is missing required value(s): "
-            + ", ".join(missing)
-            + "\n       Both API_URL and API_KEY must be set."
-        )
-
-    return os.getenv("API_URL"), os.getenv("API_KEY")
-
-
 # Fail fast if the schedule file does not exist.
 if not os.path.isfile(args.schedule_file):
     fail(
@@ -165,42 +68,14 @@ if not os.path.isfile(args.schedule_file):
     )
 
 
-# Load and validate .env
-canvas_api_url, canvas_api_token = check_env_file()
+# Connect to Canvas (validates .env)
+canvas, user = connect()
 
-# Connect to Canvas
-canvas = Canvas(canvas_api_url, canvas_api_token)
-user = canvas.get_current_user()
-print(f"Current User: {user.name} ({user.id})")
+quarter_season, quarter_year = print_current_quarter()
 
-quarter_season, quarter_year = current_quarter()
-quarter_name = f"{quarter_season} {quarter_year % 100}"
-print(f"Current quarter: {quarter_name} ({quarter_year}-{quarter_season})")
+# Step 1-2: Determine the course (prompts unless -i/--id was given)
+course = select_course(canvas, user, quarter_season, quarter_year, args.course_id)
 
-# Step 1: Determine the course id
-if args.course_id is not None:
-    course_id = args.course_id
-else:
-    enrollments = user.get_enrollments(enrollment_state=["active"], include=["course"])
-
-    print(f"\nAll courses in {quarter_name} (plus _Test_Assignment_Uploads):")
-    for enrollment in enrollments:
-        cid = enrollment.course_id
-
-        try:
-            course = canvas.get_course(cid)
-            cname = course.name
-        except Exception as e:
-            cname = "unknown"
-
-        if is_test_course(cname, quarter_season, quarter_year):
-            print(f"{cid}: {cname}")
-
-    # Step 2: Prompt user to select course
-    course_id = int(input("\nInput Course ID: "))
-
-course = canvas.get_course(course_id)
-print(f"Selected course: {course.name}")
 
 # Step 3: Schedule file path from command line
 schedule_path = args.schedule_file

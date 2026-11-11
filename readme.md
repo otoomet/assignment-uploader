@@ -1,12 +1,14 @@
-# Canvas Assignment Uploader
+# Canvas course tools
 
-A command-line tool that uploads course assignments to Canvas.
+Command-line tools for managing course materials on Canvas through the
+Canvas API.
 
-It reads a course schedule spreadsheet (`.ods` or `.xlsx`) that contains a
-sheet for the current quarter, finds the date column plus the problem-set
-(`PS ...`), lab (`Lab ...`) and quiz (`Quiz ...`) columns, and creates the
-corresponding assignments in a Canvas course — one group per assignment
-type, with customizable due-date offsets and point values.
+- [`assignment-setup.py`](#assignment-setuppy): create the quarter's
+  assignments in bulk from a course schedule spreadsheet.
+- `canvas-upload.py` (planned): upload individual files, e.g. PDFs and
+  data files, and link them from an assignment page.
+
+Code shared by the tools is in `canvas_common.py`.
 
 ## Installation
 
@@ -33,23 +35,38 @@ type, with customizable due-date offsets and point values.
    You can obtain an API key from Canvas: *Account → Settings →
    New Access Token*.
 
-   The `.env` file must be readable only by you (mode 600); the script
-   refuses to run otherwise:
+   The `.env` file must be readable only by you (mode 600); the tools
+   refuse to run otherwise:
 
    ```bash
    chmod 600 .env
    ```
 
-## Usage
+   This check is done on Linux and macOS only; on Windows it is skipped.
+   Under WSL keep the `.env` file on the Linux file system (e.g. in your
+   home directory), not under `/mnt/c`, where `chmod` has no effect.
+
+On Windows, run the tools as `python assignment-setup.py ...`.  Windows
+support is best-effort and untested.
+
+## assignment-setup.py
+
+Reads a course schedule spreadsheet (`.ods` or `.xlsx`) that contains a
+sheet for the current quarter, finds the date column plus the problem-set
+(`PS ...`), lab (`Lab ...`) and quiz (`Quiz ...`) columns, and creates the
+corresponding assignments in a Canvas course — one group per assignment
+type, with customizable due-date offsets and point values.
+
+### Usage
 
 Run the script with the schedule file as the command-line argument:
 
 ```bash
-python upload_assignments.py path/to/schedule.ods
+python assignment-setup.py path/to/schedule.ods
 ```
 or just
 ```bash
-./upload_assignments.py path/to/schedule.ods
+./assignment-setup.py path/to/schedule.ods
 ```
 Both `.ods` and `.xlsx` files are supported.
 
@@ -57,7 +74,7 @@ Optionally pass the Canvas course ID with `-i`/`--id` to skip the
 course-selection prompt:
 
 ```bash
-python upload_assignments.py path/to/schedule.ods --id 12345
+python assignment-setup.py path/to/schedule.ods --id 12345
 ```
 
 Then follow the prompts:
@@ -86,7 +103,7 @@ Assignments are uploaded to the existing Canvas assignment groups —
 (created if missing).
 They are marked as "online upload" submissions and "published".
 
-### Schedule file format
+#### Schedule file format
 
 The file must contain a sheet for the current quarter, e.g. "Au 2026"
 or "26-au" (fuzzy-matched by
