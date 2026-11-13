@@ -5,8 +5,8 @@ Canvas API.
 
 - [`assignment-setup.py`](#assignment-setuppy): create the quarter's
   assignments in bulk from a course schedule spreadsheet.
-- `canvas-upload.py` (planned): upload individual files, e.g. PDFs and
-  data files, and link them from an assignment page.
+- [`canvas-upload.py`](#canvas-uploadpy): upload individual files, e.g.
+  PDFs and data files, to the course Files.
 
 Code shared by the tools is in `canvas_common.py`.
 
@@ -46,7 +46,8 @@ Code shared by the tools is in `canvas_common.py`.
    Under WSL keep the `.env` file on the Linux file system (e.g. in your
    home directory), not under `/mnt/c`, where `chmod` has no effect.
 
-On Windows, run the tools as `python assignment-setup.py ...`.  Windows
+On Windows, run the tools as `python assignment-setup.py ...` (or
+`python canvas-upload.py ...`).  Windows
 support is best-effort and untested.
 
 ## assignment-setup.py
@@ -123,3 +124,31 @@ Placeholder cells that mean "there is no assignment this week" — e.g.
 — are detected and skipped; they are not uploaded and are not counted when
 detecting the weekdays the type's assignments fall on.  Real titles such as
 `PS4: data manipulations (no groups)` are unaffected.
+
+
+## canvas-upload.py
+
+Uploads one or more files (PDFs, data files, documents, ...) to a folder
+in the _Files_ section of a Canvas course.
+
+### Usage
+
+```bash
+python canvas-upload.py --folder data data1.csv.gz data2.csv.gz
+```
+
+- `-f`/`--folder` is required.  It is the destination folder in the course
+  Files, e.g. `data` or a nested `data/lab3`.  A folder that does not exist
+  is created (the script tells you).
+- `-i`/`--id` gives the Canvas course ID and skips the course-selection
+  prompt, just as in `assignment-setup.py`.
+- A file with the same name in the same folder is **overwritten**, which is
+  handy for fixing typos.  For each file the script prints whether it was
+  created or overwritten, and its Canvas URL.  Overwriting keeps the file's
+  hidden/locked setting.
+- All files are checked before anything is uploaded; if one does not exist,
+  nothing is uploaded.  If an upload fails, the remaining files are still
+  uploaded and the script exits with a non-zero status.
+
+Linking the uploaded files from assignment pages or the schedule is not
+implemented yet.

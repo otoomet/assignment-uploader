@@ -6,7 +6,7 @@ through the Canvas API.
 | Tool               | Purpose                                                        | Status        |
 |--------------------|----------------------------------------------------------------|---------------|
 | `assignment-setup.py` | Bulk-create the quarter's assignments from a schedule sheet | implemented   |
-| `canvas-upload.py`    | Upload individual files and link them to an assignment page | to be specified |
+| `canvas-upload.py`    | Upload individual files to the course Files                 | implemented (linking planned) |
 
 Code common to the tools lives in `canvas_common.py` (see
 [Shared requirements](#shared-requirements)).  The tools are written in
@@ -74,9 +74,10 @@ These apply to every tool and are implemented in `canvas_common.py`.
    - ask the user for the course id.
 
 
-## `assignment-setup.py`: bulk assignment upload
+## `assignment-setup.py`: bulk assignment setup
 
-It uses a course schedule sheet, and uploads the assignments there on canvas.
+It uses a course schedule sheet, and creates the corresponding
+assignments on canvas.
 
 ### Command-line options
 
@@ -132,17 +133,66 @@ It uses a course schedule sheet, and uploads the assignments there on canvas.
 6. All uploaded assignments should be marked as "online upload".
 
 
-## `canvas-upload.py`: upload files and link them to an assignment
+## `canvas-upload.py`: upload files to the course Files
 
 Uploads individual files (PDFs, data files, documents, ...) to the course
-files on Canvas, and links them from the page of an existing assignment.
+_Files_ section on Canvas.  Linking the uploaded files from assignment
+pages or the schedule is planned for a later version (see
+[Planned](#planned)).
 
-_Requirements to be written.  The behavior (how the assignment is chosen,
-how the existing description is treated, where the files are stored, link
-style, dry run, ...) is still to be discussed._
+It reuses the shared requirements above (credentials, quarter, course
+selection, `-i/--id`).
 
-It will reuse the shared requirements above (credentials, quarter, course
-selection).
+### Behavior
+
+1. The script uploads one or multiple files, given as command line
+   arguments.
+2. The destination folder (in the course _Files_ section) is given with
+   `-f/--folder`, e.g. `--folder data` or a nested `--folder data/lab3`.
+3. If `--folder` is not given, the script stops with an error message that
+   asks for it.  (Guessing the folder from the file type is planned, see
+   below; until then the folder is always required.)
+4. If the folder does not exist, it is created, and the script says so.
+5. Re-uploading a file overwrites the existing file with the same name in
+   the same folder (upload with `on_duplicate=overwrite`).  This is
+   intended for fixing typos.  For each file the script reports whether it
+   was created or overwritten; to know which, it looks at the files in the
+   destination folder before uploading.
+
+   Observed Canvas behavior (checked on the test course):
+   - an overwrite gives the file a **new file id**, but the old id still
+     resolves to the replacement through the API, and the folder contains
+     only one copy;
+   - the file's hidden/locked state is **kept** by the overwrite;
+   - the `hidden`/`locked` parameters of an upload are ignored (visibility
+     can only be changed afterwards with a separate file update), so the
+     script does not touch visibility.
+
+   Not verified: that an old browser link to the file keeps working for
+   students.
+6. All given files are checked for existence before anything is uploaded.
+   If one is missing, the script stops with an error and uploads nothing.
+7. If an upload fails, the script continues with the remaining files,
+   prints a summary at the end, and exits with a non-zero status.
+8. For each uploaded file, the script prints its Canvas URL in the form
+   `https://<host>/courses/<course id>/files/<file id>`, built from the host
+   in `API_URL` (with or without a trailing slash or `/api/v1`).  It does
+   not print the API's download URL, which contains a per-file access token.
+
+### Planned
+
+These are not part of the first version.
+
+1. **Guessing the folder.**  Choose the default folder from the type of
+   file.  Extension alone is not enough: PDFs are used for slides, problem
+   sets, labs and readings, while data are mostly (compressed) `.csv`.
+   How to guess (extension, file name conventions, a configuration file)
+   is to be discussed.
+2. **Linking** the uploaded file from the page of an assignment, and
+   linking the slides from the schedule.  Assignment pages, the syllabus
+   and wiki pages are all an HTML body, so the linking part should be
+   separate from uploading: uploading returns the Canvas file, linking
+   takes a file and a target page.
 
 
 ## Platform notes
@@ -163,6 +213,12 @@ selection).
    connection, quarter-name handling and course selection.
 2. Each tool is a separate script.  Script names may contain hyphens, but
    modules that are imported must not, hence `canvas_common.py`.
+
+### Questions:
+
+* What is a good way to specify course-specific canvas course id?  I
+  propose to have a file `course-id.txt` in `pages/` folder in the
+  each course project, but I am not sure if it is the best way.
 
 
 ## Readme file

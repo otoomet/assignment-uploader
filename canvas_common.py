@@ -8,6 +8,7 @@ import os
 import re
 import sys
 from datetime import datetime
+from urllib.parse import urlsplit
 
 import pytz
 from canvasapi import Canvas
@@ -77,6 +78,16 @@ def connect():
     user = canvas.get_current_user()
     print(f"Current User: {user.name} ({user.id})")
     return canvas, user
+
+
+def file_url(course_id, file_id):
+    """Browser URL of a course file, built from the host in API_URL.
+
+    API_URL may or may not have a trailing slash or an `/api/v1` suffix.
+    The API's own download URL is not used: it contains a per-file token.
+    """
+    parts = urlsplit(os.getenv("API_URL", ""))
+    return f"{parts.scheme}://{parts.netloc}/courses/{course_id}/files/{file_id}"
 
 
 # ---------------------------------------------------------------------------
