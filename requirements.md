@@ -18,18 +18,38 @@ best-effort basis (see [Platform notes](#platform-notes)).
 
 These apply to every tool and are implemented in `canvas_common.py`.
 
-### Credentials
+### Credentials and settings
 
-1. The API url and the API key are read from a file `.env` (in the
-   current directory).  It should contain `API_URL` and `API_KEY`.
-   See the `.env-template`.
-2. On POSIX systems this file should only be readable by the user, not by
-   the world (mode 600).
+1. The API url and the API key are read from `.env` files.  A `.env`
+   file may contain `API_URL`, `API_KEY` and `COURSE_ID`.
+2. The files are searched in this order, the first match winning:
+   1. the file named by the environment variable `CANVAS_ENV_FILE`
+      (an error if it is set but does not exist);
+   2. `.env` in the current directory, then in each parent directory;
+   3. `.env` in the directory of the scripts.
 
-   If `.env` does not exist, does not contain the url and API key, or
-   has wrong mode, the tool should produce a corresponding error message
-   and exit with a non-zero status.
-3. On Windows the permission check is skipped.
+   Real environment variables `API_URL`, `API_KEY` and `COURSE_ID`
+   override the files.
+3. `API_URL` and `API_KEY` are taken **together from a single file**:
+   the first file that defines `API_KEY`.  It is an error if that file
+   does not define `API_URL`.  The two are never combined from different
+   files, so that a `.env` in some other directory cannot redirect the key
+   to another host.
+4. `COURSE_ID` (an integer) is taken from the first file that defines it.
+   It is used by tools that work on one course, where `-i/--id` overrides
+   it.  When used, the tool says where it came from.  Only
+   `canvas-upload.py` uses it.
+5. On POSIX systems the file that holds `API_KEY` should only be readable
+   by the user, not by the world (mode 600).  Other files (e.g. one
+   holding only `COURSE_ID`) are not checked.
+
+   If no file defines the url and API key, a file holding the key has
+   wrong mode, or `COURSE_ID` is not an integer, the tool should produce a
+   corresponding error message and exit with a non-zero status.  The
+   message for missing credentials lists where the tool looked.
+6. The tool prints which file the credentials came from.
+7. On Windows the permission check is skipped (Windows does not
+   expose meaningful permission bits to Python).
 
 ### Quarter names
 
@@ -57,8 +77,8 @@ These apply to every tool and are implemented in `canvas_common.py`.
 1. Tools that work on a single course should accept the course id on the
    command line as `-i/--id`.  (The course id is an integer and does not
    contain spaces or special characters.)
-2. If the course id was not provided on the command line, the tool
-   should:
+2. If the course id was not provided on the command line (and, for
+   `canvas-upload.py`, not in a `.env` file), the tool should:
 
    - get the list of all the user's active courses, and extract the
      courses that correspond to the current quarter.  The course names
@@ -72,6 +92,8 @@ These apply to every tool and are implemented in `canvas_common.py`.
      name includes underscores).
 
    - ask the user for the course id.
+3. If the course cannot be opened (wrong id, no access, bad token), the
+   tool should say so in a message and exit, not print a traceback.
 
 
 ## `assignment-setup.py`: bulk assignment setup
@@ -85,6 +107,7 @@ assignments on canvas.
    argument.  It is assumed that it is either an .ods or
    .xlsx file.  If the file does not exist, the tool should say so and exit.
 2. `-i/--id`: the course id (see [Course selection](#course-selection)).
+   `COURSE_ID` from `.env` files is ignored by this tool.
 
 ### Schedule handling
 
@@ -141,7 +164,9 @@ pages or the schedule is planned for a later version (see
 [Planned](#planned)).
 
 It reuses the shared requirements above (credentials, quarter, course
-selection, `-i/--id`).
+selection, `-i/--id`).  If `-i/--id` is not given, it uses `COURSE_ID`
+from the `.env` files (see [Credentials and settings](#credentials-and-settings)),
+so that a course directory can carry its own course id.
 
 ### Behavior
 
@@ -200,10 +225,11 @@ These are not part of the first version.
 1. The tools are developed on Linux.  macOS should work the same way.
 2. Windows is best-effort and untested.  Run the tools as
    `python assignment-setup.py ...`; the `.py` extension is needed there.
-   The `.env` permission check is skipped (see [Credentials](#credentials)).
-3. Under WSL, keep `.env` on the Linux file system (e.g. in the home
-   directory).  Files on `/mnt/c` normally appear with mode 777 and cannot
-   be changed with `chmod`, so the permission check would refuse to run.
+   The `.env` permission check is skipped (see [Credentials and settings](#credentials-and-settings)).
+3. Under WSL, keep the `.env` file that holds the key on the Linux file
+   system (e.g. in the home directory).  Files on `/mnt/c` normally appear
+   with mode 777 and cannot be changed with `chmod`, so the permission
+   check would refuse to run.
 
 
 ## Code organization

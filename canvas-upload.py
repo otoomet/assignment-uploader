@@ -8,6 +8,7 @@ import sys
 
 from canvas_common import (
     fail,
+    load_settings,
     connect,
     print_current_quarter,
     select_course,
@@ -60,7 +61,8 @@ parser.add_argument(
     dest="course_id",
     type=int,
     metavar="ID",
-    help="Canvas course ID to upload into (skips the course-selection prompt).",
+    help="Canvas course ID to upload into (skips the course-selection prompt).  "
+         "Overrides COURSE_ID from .env.",
 )
 args = parser.parse_args()
 
@@ -84,9 +86,16 @@ if duplicates:
          f"({', '.join(duplicates)}); the later one would overwrite the "
          "earlier one.  Nothing was uploaded.")
 
-canvas, user = connect()
+settings = load_settings()
+canvas, user = connect(settings)
 quarter_season, quarter_year = print_current_quarter()
-course = select_course(canvas, user, quarter_season, quarter_year, args.course_id)
+
+# Course: -i/--id, else COURSE_ID from a .env file, else prompt.
+course_id = args.course_id
+if course_id is None and settings["course_id"] is not None:
+    course_id = settings["course_id"]
+    print(f"Using course ID {course_id} (from {settings['course_id_source']})")
+course = select_course(canvas, user, quarter_season, quarter_year, course_id)
 
 folder_exists, present = existing_files(course, folder)
 if not folder_exists:
@@ -107,7 +116,7 @@ for path in args.files:
         failed.append(path)
         continue
     print(f"{action} {folder}/{response['display_name']}: "
-          f"{file_url(course.id, response['id'])}")
+          f"{file_url(settings['api_url'], course.id, response['id'])}")
 
 total = len(args.files)
 print(f"\n{total - len(failed)} of {total} file(s) uploaded to '{folder}'.")

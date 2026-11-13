@@ -46,6 +46,35 @@ Code shared by the tools is in `canvas_common.py`.
    Under WSL keep the `.env` file on the Linux file system (e.g. in your
    home directory), not under `/mnt/c`, where `chmod` has no effect.
 
+### Where the `.env` file is looked for
+
+The tools do not need to be run from the project directory.  The settings
+are searched in this order (first match wins):
+
+1. the file named by the `CANVAS_ENV_FILE` environment variable, if set;
+2. `.env` in the current directory, then in each parent directory;
+3. `.env` in the directory where the scripts are installed.
+
+Real environment variables (`API_URL`, `API_KEY`, `COURSE_ID`) override
+all files.  The tool prints which file the credentials came from.
+
+Typically the global file next to the scripts holds `API_URL` and `API_KEY`.
+In each course's directory you can add a small `.env` with just
+
+```env
+COURSE_ID=123456
+```
+
+so that `canvas-upload.py` knows the course without `-i`, also when run
+from a subdirectory of the course directory.  A `-i/--id` argument
+overrides `COURSE_ID`.  (`assignment-setup.py` ignores `COURSE_ID`.)
+
+For safety, `API_URL` and `API_KEY` are always taken **together from one
+file**, the first one that defines `API_KEY`.  A `.env` found elsewhere
+therefore cannot redirect your key to another server.  The mode-600 check
+applies to the file that holds the key; a file with only `COURSE_ID` can
+have any permissions.
+
 On Windows, run the tools as `python assignment-setup.py ...` (or
 `python canvas-upload.py ...`).  Windows
 support is best-effort and untested.
@@ -141,7 +170,9 @@ python canvas-upload.py --folder data data1.csv.gz data2.csv.gz
   Files, e.g. `data` or a nested `data/lab3`.  A folder that does not exist
   is created (the script tells you).
 - `-i`/`--id` gives the Canvas course ID and skips the course-selection
-  prompt, just as in `assignment-setup.py`.
+  prompt, just as in `assignment-setup.py`.  Without it, `COURSE_ID` from a
+  `.env` file is used if there is one (see above); the course name is always
+  printed so you can see where the files go.
 - A file with the same name in the same folder is **overwritten**, which is
   handy for fixing typos.  For each file the script prints whether it was
   created or overwritten, and its Canvas URL.  Overwriting keeps the file's
